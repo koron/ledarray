@@ -49,7 +49,7 @@ int main() {
     PIO pio = pio0;
     int sm = 0;
     uint offset = pio_add_program(pio, &ws2812_program);
-    ws2812_program_init(pio, sm, offset, PIN_TX, 833333.33, false);
+    ws2812_program_init(pio, sm, offset, PIN_TX, 800000);
 
     uint t = 0;
     while (1) {
