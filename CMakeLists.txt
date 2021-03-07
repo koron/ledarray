@@ -22,11 +22,7 @@ add_executable(ledarray
 
 pico_generate_pio_header(ledarray
 	${CMAKE_CURRENT_LIST_DIR}/ws2812.pio
-	OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR}/generated)
-
-#pico_generate_pio_header(ledarray
-#	${CMAKE_CURRENT_LIST_DIR}/ws2812dma.pio
-#	OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR}/generated)
+	OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 # Link Time Optimization is not supported yet.
 #set_property(TARGET matrixscan PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)

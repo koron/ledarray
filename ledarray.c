@@ -7,14 +7,18 @@
 #include "config.h"
 #include "ws2812.pio.h"
 
+#ifndef LEDARRAY_PIO
+# define LEDARRAY_PIO pio0
+# warning LEDARRAY_PIO is unavailable, pio0 is auto selected.
+#endif
+
 uint32_t led_state[LEDARRAY_NUM] = {};
 
 static int ledarray_chan0;
 
 void ledarray_init() {
-    // TODO: claim a PIO and SM
-    PIO pio = pio0;
-    int sm = 0;
+    PIO pio = LEDARRAY_PIO;
+    int sm = pio_claim_unused_sm(pio, true);
 
     // setup PIO/SM with ws2812 program.
     uint offset = pio_add_program(pio, &ws2812_program);

@@ -1,10 +1,11 @@
 #pragma once
 
-#ifndef LEDARRAY_PIN
-# error LED_PIN is unavailable, please check your config.h
-#endif
 #ifndef LEDARRAY_NUM
 # error LEDARRAY_NUM is unavailable, please check your config.h
+#endif
+
+#ifndef LEDARRAY_PIN
+# error LED_PIN is unavailable, please check your config.h
 #endif
 
 extern uint32_t led_state[LEDARRAY_NUM];
