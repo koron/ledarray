@@ -17,6 +17,7 @@ pico_sdk_init()
 
 add_executable(ledarray
 	main.c
+	ledarray.c
 	)
 
 pico_generate_pio_header(ledarray
