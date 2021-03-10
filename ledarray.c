@@ -1,5 +1,7 @@
 #include <stdio.h>
 
+#include "pico/stdlib.h"
+#include "pico/sem.h"
 #include "hardware/pio.h"
 #include "hardware/dma.h"
 #include "hardware/irq.h"
@@ -12,11 +14,41 @@
 # warning LEDARRAY_PIO is unavailable, pio0 is auto selected.
 #endif
 
+// reset delay for NeoPixel should be longer than 80us
+static const uint resetdelay_us = 100;
+
 uint32_t led_state[LEDARRAY_NUM] = {};
 
-static int ledarray_chan0;
+static uint         dma_chan;
+static io_rw_32     dma_chan_mask;
+static alarm_id_t   resetdelay_alarm = 0;
+static struct       semaphore resetdelay_sem;
+
+__attribute__((weak)) void ledarray_resetdelay_completed(void) {}
+
+static int64_t on_completed_resetdelay(alarm_id_t id, void *user_data) {
+    resetdelay_alarm = 0;
+    sem_release(&resetdelay_sem);
+    // notify reset delay completed to user function.
+    ledarray_resetdelay_completed();
+    return 0; // no repeat
+}
+
+static void __isr on_completed_dma() {
+    if (dma_hw->ints0 & dma_chan_mask) {
+        // clear IRQ0 status register bit
+        dma_hw->ints0 = dma_chan_mask;
+        if (resetdelay_alarm != 0) {
+            cancel_alarm(resetdelay_alarm);
+        }
+        resetdelay_alarm = add_alarm_in_us(resetdelay_us,
+                on_completed_resetdelay, NULL, true);
+    }
+}
 
 void ledarray_init() {
+    sem_init(&resetdelay_sem, 1, 1);
+
     PIO pio = LEDARRAY_PIO;
     int sm = pio_claim_unused_sm(pio, true);
 
@@ -31,14 +63,20 @@ void ledarray_init() {
     channel_config_set_dreq(&c, pio_get_dreq(pio, sm, true));
     dma_channel_configure(chan, &c, &pio->txf[sm], NULL,
             count_of(led_state), false);
-    ledarray_chan0 = chan;
+
+    // enalbe IRQ0 at DMA trasfer completed.
+    irq_set_exclusive_handler(DMA_IRQ_0, on_completed_dma);
+    dma_channel_set_irq0_enabled(chan, true);
+    irq_set_enabled(DMA_IRQ_0, true);
+
+    dma_chan = chan;
+    dma_chan_mask = 1u << chan;
 }
 
 bool ledarray_task() {
-    if (dma_channel_is_busy(ledarray_chan0)) {
+    if (!sem_acquire_timeout_ms(&resetdelay_sem, 0)) {
         return false;
     }
-    // TODO: wait more than 80us for next data.
-    dma_channel_set_read_addr(ledarray_chan0, led_state, true);
+    dma_channel_set_read_addr(dma_chan, led_state, true);
     return true;
 }

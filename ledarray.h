@@ -23,17 +23,21 @@ void ledarray_init();
 void ledarray_task();
 
 // ledarray_num is number of LED in the array.
-inline int ledarray_num() {
+static inline int ledarray_num() {
     return LEDARRAY_NUM;
 }
 
 // ledarray_set_rgb set color of a LED with RGB.
-inline void ledarray_set_rgb(int i, uint8_t r, uint8_t g, uint8_t b) {
+static inline void ledarray_set_rgb(int i, uint8_t r, uint8_t g, uint8_t b) {
     led_state[i] =
         ((uint32_t)(r) << 16) |
         ((uint32_t)(g) << 24) |
         ((uint32_t)(b) << 8);
 }
+
+// ledarray_resetdelay_completed is callbacked when ledarray_task can be
+// called.
+__attribute__((weak)) void ledarray_resetdelay_completed(void);
 
 #ifdef __cplusplus
 }
