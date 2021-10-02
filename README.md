@@ -2,6 +2,15 @@
 
 using WS2812 driver (using compatible YS-SK6812MINI-E devices).
 
+## How to build
+
+Require `PICO_SDK_PATH` env var.
+
+```console
+$ cmake -B build
+$ make -j4 -C build
+```
+
 ## Timinig
 
 Name | Desc                   | Min | Standard | Max  | Unit 
